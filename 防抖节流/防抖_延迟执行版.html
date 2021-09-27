@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" id="input" />
+</body>
+
+<script>
+    // 场景：input事件请求查询后端是否存在该用户名
+
+    let ipt = document.getElementById('input');
+
+    // 组装借助防抖代理调用接口
+    let proxyReq = debounce(handleSendPhone, 3000)
+    // let proxyReq = debounce_bindThis(handleSendPhone, 3000)
+
+    // 用户输入内容实时反馈结果
+    ipt.addEventListener('input', function () {
+        let val = this.value;
+        // 直接调用模拟请求接口：input事件每输入一个字符将会调用一次接口
+        // handleSendPhone(val)
+        // 防抖调用模拟请求接口: 在规定时间内,如果没有再次执行这个函数,则将在设置的延迟时间后执行该函数（闭包）
+        proxyReq(val);
+    });
+
+    // 请求接口
+    function handleSendPhone(val) {
+        ajaxRequest({
+            user: val
+        }).then(res => {
+            console.log(res)
+        })
+    }
+
+
+
+    //模拟数据（已存在帐号）
+    let items = ['111', '222', '333', '444', '555'];
+    //模拟ajax请求
+    function ajaxRequest({ user }) {
+        return new Promise((resolved, rejected) => {
+            setTimeout(() => {
+                let res = items.includes(user) ? resolved('接口调用:存在!') : rejected('接口调用:不存在！');
+                resolved(res);
+            }, 500)
+        });
+    }
+    // 未绑定this传参执行fn()
+    function debounce(fn, delay) {
+        let timer; // 定时器
+        return function (...args) { // 形成闭包
+            // 输入第一个字符后，如果在delay时间内再输入第二个字符，60行将会执行clearTimeout
+            timer && clearTimeout(timer); // 当函数再次执行时，清除定时器，让定时器重新开始计时
+
+            // 输入第一个字符，将创建定时器，传入的fn函数将在delay时间后执行
+            // 在delay事件内输入，将会在60行清除定时器，如果超过delay时间后再输入字符，才会再次创建定时器准备执行模拟请求函数
+            // 利用定时器，让指定函数延迟执行。
+            timer = setTimeout(function () {
+                // 执行传入的指定函数
+                fn();
+            }, delay)
+        }
+    }
+
+    // 绑定this传参执行fn()
+    function debounce_bindThis(fn, delay) {
+        let timer; // 定时器
+        return function (...args) { // 形成闭包  外部执行的函数其实是这个return出去的函数。
+
+            // args 为函数调用时传的参数。
+
+            let context = this; // this 为函数执行时的this绑定。
+
+            timer && clearTimeout(timer); // 当函数再次执行时，清除定时器，让定时器重新开始计时
+
+            // 利用定时器，让指定函数延迟执行。
+            timer = setTimeout(function () {
+                // 执行传入的指定函数，利用apply更改this绑定和传参
+                fn.apply(context, args);
+            }, delay)
+        }
+    }
+
+// 小结：给定函数执行时间间隔为n，若 n 秒内没有函数再次执行，则执行该函数。若 n 秒内函数再次执行，则重新计算函数被执行的时间
+// 例如：5s内持续输入字符，请求只会在停止输入后delay时间后请求
+
+</script>
+
+</html>

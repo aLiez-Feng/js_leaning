@@ -1,0 +1,92 @@
+<!--
+ * @Author: your name
+ * @Date: 2021-09-27 17:23:54
+ * @LastEditTime: 2021-09-27 17:32:21
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \学习\节流.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" id="input" />
+</body>
+
+<script>
+    // 场景：input事件请求查询后端是否存在该用户名
+
+    let ipt = document.getElementById('input');
+
+    // 组装借助防抖代理调用接口
+    let proxyReq = throttle(handleSendPhone, 1000)
+
+    // 用户输入内容实时反馈结果
+    ipt.addEventListener('input', function () {
+        let val = this.value;
+        // 直接调用模拟请求接口：input事件每输入一个字符将会调用一次接口
+        // handleSendPhone(val)
+        // 防抖调用模拟请求接口: 在规定时间内,如果没有再次执行这个函数,则将在设置的延迟时间后执行该函数（闭包）
+        proxyReq(val);
+    });
+
+    // 请求接口
+    function handleSendPhone(val) {
+        ajaxRequest({
+            user: val
+        }).then(res => {
+            console.log(res)
+        })
+    }
+
+
+
+    //模拟数据（已存在帐号）
+    let items = ['111', '222', '333', '444', '555'];
+    //模拟ajax请求
+    function ajaxRequest({ user }) {
+        return new Promise((resolved, rejected) => {
+            setTimeout(() => {
+                let res = items.includes(user) ? resolved('接口调用:存在!') : rejected('接口调用:不存在！');
+                resolved(res);
+            }, 500)
+        });
+    }
+
+    /**
+    * @fn : 要执行的函数
+    * @delay : 每次函数的时间间隔
+    */
+    function throttle(fn, delay) {
+        let timer;    // 定时器
+
+        return function (...args) {
+            let context = this;
+            // 如果timer存在，说明函数还未该执行 也就是距离上次函数执行未间隔指定的时间
+            if (timer) return;
+            // 如果函数执行之后还有函数还在触发，再延迟执行。
+            timer = setTimeout(function (...args) {
+                // 当函数执行时，让timer为null。
+                timer = null;
+                fn.apply(context, args);
+            }, delay);
+        }
+    }
+
+
+
+
+// 小结：在防抖，重复执行重置定时器的基础上，加入了判断，如果一轮（delay一轮）定时器执行完（timer = null;）执行时，如果持续输入字符，下次执行请求将会在下一轮delay
+// 也就是说，在规定的delay时间内，如果持续输入字符，都只会（delay)秒/*执行一次，执行完后重置，等待下一轮输入
+
+
+</script>
+
+</html>

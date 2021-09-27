@@ -1,0 +1,96 @@
+<!--
+ * @Author: your name
+ * @Date: 2021-09-27 17:07:15
+ * @LastEditTime: 2021-09-27 17:44:18
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \学习\防抖_立即执行版.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" id="input" />
+</body>
+
+<script>
+    // 场景：input事件请求查询后端是否存在该用户名
+
+    let ipt = document.getElementById('input');
+
+    // 组装借助防抖代理调用接口
+    let proxyReq = debounce(handleSendPhone, 3000, true)
+
+    // 用户输入内容实时反馈结果
+    ipt.addEventListener('input', function () {
+        let val = this.value;
+        // 直接调用模拟请求接口：input事件每输入一个字符将会调用一次接口
+        // handleSendPhone(val)
+        // 防抖调用模拟请求接口: 在规定时间内,如果没有再次执行这个函数,则将在设置的延迟时间后执行该函数（闭包）
+        proxyReq(val);
+    });
+
+    // 请求接口
+    function handleSendPhone(val) {
+        ajaxRequest({
+            user: val
+        }).then(res => {
+            console.log(res)
+        })
+    }
+
+
+
+    //模拟数据（已存在帐号）
+    let items = ['111', '222', '333', '444', '555'];
+    //模拟ajax请求
+    function ajaxRequest({ user }) {
+        return new Promise((resolved, rejected) => {
+            setTimeout(() => {
+                let res = items.includes(user) ? resolved('接口调用:存在!') : rejected('接口调用:不存在！');
+                resolved(res);
+            }, 500)
+        });
+    }
+    /**
+    * @fn : 要执行的函数
+    * @delay : 执行函数的时间间隔
+    * @immediate : 是否立即执行函数 true 表立即执行，false 表非立即执行
+    */
+    function debounce(fn, delay, immediate) {
+        let timer; // 定时器
+        return function (...args) { // 形成闭包  外部执行的函数其实是这个return出去的函数。
+            // args 为函数调用时传的参数。
+            let context = this; // this 为函数执行时的this绑定。
+            timer && clearTimeout(timer); // 当函数再次执行时，清除定时器，让定时器重新开始计时
+            // immediate为true 表示第一次触发就执行,当输入一个字符时，则直接调用模拟请求，当输入过程中已经过了下方定时器间隔的时间再输入一个字符，则又会立即执行请求（以满足需求）
+            if (immediate) {
+                // 执行一次之后赋值为false  
+                immediate = false;
+                fn.apply(context, args)
+            }
+            // 利用定时器，让指定函数延迟执行。
+            timer = setTimeout(function () {
+                // immediate 赋值为true  下次输入时 还是会立即执行
+                immediate = true;
+                // 执行传入的指定函数，利用apply更改传入函数内部的this绑定，传入 args参数
+                fn.apply(context, args);
+            }, delay)
+        }
+    }
+
+
+    // 小结：立即执行防抖，仅在delay时间没有持续重置（immediate = false;），并结束delay前执行第一次（immediate = true;）
+    // 例如：用户在首次输入时会请求一次，接下来如果持续输入，都只会在delay一轮后执行第二次，但如果第一轮被重置了delay，就还在第一轮等待第一轮结束，以此类推
+
+
+</script>
+
+</html>
