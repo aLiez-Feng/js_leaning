@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>防抖测试</title>
+</head>
+
+<body>
+  <input type="text" id="input">
+  <script>
+    function debounce(fn, delay) {
+      let timer = null
+      return function () {
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+          fn.apply(fn, arguments)
+        }, delay);
+      }
+    }
+
+    let inputDom = document.getElementById("input")
+    // inputDom.oninput = function (event) {
+    //   console.log(event.target.value)
+    // }
+
+    inputDom.oninput = debounce((event) => {
+      console.log(event.target.value)
+    }, 1000)
+  </script>
+</body>
+
+</html>
